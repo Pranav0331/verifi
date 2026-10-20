@@ -37,6 +37,14 @@ export const AnchorStatus = v.union(
   v.literal("FAILED")
 );
 
+export const VerificationSessionStatus = v.union(
+  v.literal("pending"),
+  v.literal("approved"),
+  v.literal("verified"),
+  v.literal("rejected"),
+  v.literal("expired")
+);
+
 export default defineSchema({
   users: defineTable({
     clerkId: v.string(),
@@ -227,4 +235,44 @@ export default defineSchema({
   })
     .index("by_challenge", ["challenge"])
     .index("by_clerkId", ["clerkId"]),
+
+  verifierApps: defineTable({
+    name: v.string(),
+    clientId: v.string(), // Unique client ID: vapp_...
+    hashedApiKey: v.string(), // SHA-256 hash of the API key
+    callbackUrl: v.string(), // Default registered callback URL
+    active: v.boolean(), // Active status
+    description: v.optional(v.string()),
+    allowedOrigins: v.optional(v.array(v.string())), // Allowed domain origins for CORS / redirect
+    ownerUserId: v.optional(v.id("users")), // Creator or admin user
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_clientId", ["clientId"])
+    .index("by_active", ["active"]),
+
+  verificationSessions: defineTable({
+    sessionId: v.string(), // Secure, non-guessable 32-byte hex ID: vsess_...
+    verifierAppId: v.id("verifierApps"),
+    requestedClaims: v.array(v.string()), // e.g. ["name", "email", "role"]
+    requestedCredentialType: v.optional(v.string()), // e.g. "EmploymentCredential"
+    status: VerificationSessionStatus, // "pending" | "approved" | "verified" | "rejected" | "expired"
+    userId: v.optional(v.id("users")), // User who authenticated & approved
+    credentialId: v.optional(v.string()), // ID of the credential presented
+    credentialDocId: v.optional(v.id("credentials")), // Document reference in credentials table
+    callbackUrl: v.string(), // Specific callback URL for this session
+    nonce: v.optional(v.string()), // Nonce for replay prevention
+    metadata: v.optional(v.any()), // Extra metadata passed by verifier app
+    verificationResult: v.optional(VerificationResult), // "VERIFIED" | "INVALID" | "REVOKED" | "EXPIRED"
+    failureReason: v.optional(v.string()),
+    verifiedAt: v.optional(v.number()),
+    expiresAt: v.number(), // Short-lived expiration timestamp (ms)
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_sessionId", ["sessionId"])
+    .index("by_verifierAppId", ["verifierAppId"])
+    .index("by_status", ["status"])
+    .index("by_expiresAt", ["expiresAt"])
+    .index("by_userId", ["userId"]),
 });

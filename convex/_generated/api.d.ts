@@ -11,6 +11,8 @@
 import type * as auth from "../auth.js";
 import type * as blockchain from "../blockchain.js";
 import type * as credentials from "../credentials.js";
+import type * as integrations from "../integrations.js";
+import type * as lib_apiAuth from "../lib/apiAuth.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_vcVerifier from "../lib/vcVerifier.js";
 import type * as passkeys from "../passkeys.js";
@@ -29,6 +31,8 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   blockchain: typeof blockchain;
   credentials: typeof credentials;
+  integrations: typeof integrations;
+  "lib/apiAuth": typeof lib_apiAuth;
   "lib/auth": typeof lib_auth;
   "lib/vcVerifier": typeof lib_vcVerifier;
   passkeys: typeof passkeys;
